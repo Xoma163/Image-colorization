@@ -3,3 +3,4 @@
 venv/*
 *.jpg
 *.jpeg
+images/*
