@@ -17,8 +17,8 @@ SET PATH=C:\tools\cuda\bin;%PATH%
 
 
 ### Dataset
-[Download 10 000 images](https://andrewsha.net/static/files/images_10k.zip)
+[Download 10 000 images](https://andrewsha.net/static/files/images_10k.zip) (1 GB)
 
-[Download 100 000 images](https://andrewsha.net/static/files/images_100k.zip)
+[Download 100 000 images](https://andrewsha.net/static/files/images_100k.zip) (10 GB)
 
 Put dataset images in {{IMAGES_ORIGINAL_PATH}} (see in consts)
