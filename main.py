@@ -18,7 +18,7 @@ if __name__ == '__main__':
     setup()
 
     dataset = load_images()
-    data_train = [x.get_gray_as_matrix() for x in dataset]
-    data_test = [x.get_color_as_matrix() for x in dataset]
+    input_data = [x.get_gray_as_matrix() for x in dataset]
+    output_data = [x.get_color_as_matrix() for x in dataset]
     nn = NeuralNetwork()
-    nn.train(data_train, data_test)
+    nn.train(input_data, output_data)
