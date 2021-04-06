@@ -5,3 +5,4 @@ venv/*
 *.jpeg
 images/*
 model/*
+.env

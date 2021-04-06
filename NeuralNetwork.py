@@ -1,9 +1,11 @@
+import os
 import time
 
 import matplotlib.pyplot as plt
 import numpy as np
 from tensorflow.keras import optimizers, layers, models
 from tensorflow.python.keras.callbacks import Callback
+from tensorflow.python.keras.utils.multi_gpu_utils import multi_gpu_model
 
 from ImageHandler import DatasetImage
 from consts import LEARNING_PART, EPOCHS, IMAGE_SIZE
@@ -19,7 +21,7 @@ class LossCallback(Callback):
     def on_epoch_end(self, epoch, logs=None):
         self.loss[epoch] = (logs['loss'])
         if self.cpw.check(epoch):
-            print(f"Epoch {epoch}/{EPOCHS}. Loss {round(logs['loss'],5)}")
+            print(f"Epoch {epoch}/{EPOCHS}. Loss {round(logs['loss'], 5)}")
 
 
 class NeuralNetwork:
@@ -27,9 +29,11 @@ class NeuralNetwork:
     Свёрточная нейронная сеть
     """
     WEIGHTS_FILE = 'model/model_weight'
+    # https://github.com/keras-team/keras/issues/8123
+    GPUS_COUNT = int(os.getenv("GPUS_COUNT"))
 
     def __init__(self):
-        self.model = models.Sequential([
+        model = models.Sequential([
             layers.InputLayer(input_shape=(IMAGE_SIZE, IMAGE_SIZE, 1)),
             layers.Conv2D(16, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
@@ -50,7 +54,10 @@ class NeuralNetwork:
             layers.Conv2D(2, (3, 3), activation='relu', padding='same'),
             layers.UpSampling2D(2),
         ])
-
+        if self.GPUS_COUNT == 1:
+            self.model = model
+        else:
+            self.model = multi_gpu_model(model, gpus=self.GPUS_COUNT)
         self.model.summary()
         self.model.compile(optimizer=optimizers.Adam(), loss='mse')
 
@@ -81,7 +88,7 @@ class NeuralNetwork:
             x=data_train_x,
             y=data_train_y,
             epochs=EPOCHS,
-            batch_size=16,
+            batch_size=16 * self.GPUS_COUNT,
             shuffle=True,
             callbacks=[self.loss_callback],
             verbose=False
@@ -100,7 +107,7 @@ class NeuralNetwork:
         # self.model.save_weights(self.WEIGHTS_FILE)
 
     def show_loss_graphic(self):
-        plt.plot(self.loss_callback.loss.values(), self.loss_callback.loss.keys())
+        plt.plot(self.loss_callback.loss.keys(), self.loss_callback.loss.values())
         plt.show()
 
     def _predict_image(self, image: DatasetImage):
