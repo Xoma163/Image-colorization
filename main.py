@@ -16,11 +16,14 @@ def setup():
 if __name__ == '__main__':
     setup()
 
+    print('load images')
     images = load_images()
     input_data = [x.l for x in images]
     output_data = [x.ab for x in images]
 
+    print('init NN')
     nn = NeuralNetwork()
+    print('train NN')
     nn.train(input_data, output_data)
     nn.show_loss_graphic()
 
