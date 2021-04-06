@@ -35,17 +35,14 @@ class NeuralNetwork:
             layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
             layers.MaxPool2D(2),
             layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
-            # layers.MaxPool2D(2),
             layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
             layers.MaxPool2D(2),
-
             layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(512, (3, 3), activation='relu', padding='same'),
             layers.MaxPool2D(2),
             layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
             layers.UpSampling2D(2),
-
             layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
             layers.UpSampling2D(2),

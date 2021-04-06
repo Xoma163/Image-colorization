@@ -2,7 +2,7 @@ import os
 
 from ImageHandler import ImageHandler
 from NeuralNetwork import NeuralNetwork
-from consts import IMAGES_ORIGINAL_PATH, IMAGES_COUNT, IMAGES_RESIZED_PATH
+from consts import IMAGES_ORIGINAL_PATH, IMAGES_COUNT, IMAGES_RESIZED_PATH, LEARNING_PART
 
 
 def load_images():
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     nn.train(input_data, output_data)
     nn.show_loss_graphic()
 
-    test_images = images[0:2] + images[7:9]
+    test_images = images[0:2] + images[int(IMAGES_COUNT * LEARNING_PART):int(IMAGES_COUNT * LEARNING_PART) + 2]
     nn.predict_many(test_images)
 
     for image in test_images:
