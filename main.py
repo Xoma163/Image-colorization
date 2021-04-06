@@ -5,10 +5,19 @@ from dotenv import load_dotenv
 from ImageHandler import ImageHandler
 from NeuralNetwork import NeuralNetwork
 from consts import IMAGES_ORIGINAL_PATH, IMAGES_COUNT, IMAGES_RESIZED_PATH, LEARNING_PART
+from utils import CyclePercentWriter, lead_time_writer, get_time_str
 
 
+@lead_time_writer
 def load_images():
-    return [ImageHandler(image_path).dataset_image for image_path in os.listdir(IMAGES_ORIGINAL_PATH)[:IMAGES_COUNT]]
+    dataset_images = []
+    cpw = CyclePercentWriter(IMAGES_COUNT, per=10)
+    for i, image_path in enumerate(os.listdir(IMAGES_ORIGINAL_PATH)[:IMAGES_COUNT]):
+        dataset_images.append(ImageHandler(image_path).dataset_image)
+        if cpw.check(i):
+            print(f"{i}/{IMAGES_COUNT}")
+    return dataset_images
+    # return [ImageHandler(image_path).dataset_image for image_path in os.listdir(IMAGES_ORIGINAL_PATH)[:IMAGES_COUNT]]
 
 
 def setup():

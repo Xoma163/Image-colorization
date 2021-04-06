@@ -14,8 +14,7 @@ class DatasetImage:
     MAX_RGB = 255
 
     def __init__(self, rgb):
-        self.rgb = rgb  # denormalized
-        lab = self.rgb2lab(self.rgb)  # denormalized
+        lab = self.rgb2lab(rgb)  # denormalized
 
         self.l = self._normalize_l(self._get_l(lab))  # normalized
         self.ab = self._normalize_ab(self._get_ab(lab))  # normalized
@@ -52,7 +51,9 @@ class DatasetImage:
         self.show_image(rgb)
 
     def show_original_colored_image(self):
-        self.show_image(self.rgb)
+        lab = self.build_lab(self._denormalize_l(self.l), self._denormalize_ab(self.ab))
+        rgb = self.lab2rgb(lab)
+        self.show_image(rgb)
 
     @staticmethod
     def show_image(rgb):

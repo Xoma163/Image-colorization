@@ -1,9 +1,10 @@
 import os
 
 # Размер картинки в пикселях (w,h)
-IMAGE_SIZE = 128
+IMAGE_SIZE = 64
+
 # Количество изображений в выборке (макс 100 000)
-IMAGES_COUNT = 1000
+IMAGES_COUNT = 5000
 
 # Обучающая часть в долях
 LEARNING_PART = 0.7

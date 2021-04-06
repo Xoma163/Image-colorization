@@ -9,7 +9,7 @@ from tensorflow.python.keras.utils.multi_gpu_utils import multi_gpu_model
 
 from ImageHandler import DatasetImage
 from consts import LEARNING_PART, EPOCHS, IMAGE_SIZE
-from utils import CyclePercentWriter
+from utils import CyclePercentWriter, lead_time_writer
 
 
 class LossCallback(Callback):
@@ -30,7 +30,7 @@ class NeuralNetwork:
     """
     WEIGHTS_FILE = 'model/model_weight'
     # https://github.com/keras-team/keras/issues/8123
-    GPUS_COUNT = int(os.getenv("GPUS_COUNT"))
+    GPUS_COUNT = int(os.getenv("GPUS_COUNT")) if os.getenv("GPUS_COUNT") else 1
 
     def __init__(self):
         model = models.Sequential([
@@ -69,6 +69,7 @@ class NeuralNetwork:
     #     for x, y in data:
     #         yield x, y
 
+    @lead_time_writer
     def train(self, input_data, output_data):
         """
         Обучение модели
@@ -79,11 +80,12 @@ class NeuralNetwork:
 
         data_train_x = np.array(input_data[:slicer_index])
         data_test_x = np.array(input_data[slicer_index:])
+        del input_data
 
         data_train_y = np.array(output_data[:slicer_index])
         data_test_y = np.array(output_data[slicer_index:])
+        del output_data
 
-        time_start = time.time()
         self.model.fit(
             x=data_train_x,
             y=data_train_y,
@@ -93,17 +95,10 @@ class NeuralNetwork:
             callbacks=[self.loss_callback],
             verbose=False
         )
-        # self.model.fit_generator(
-        #     self.get_fit_data(data_train_x, data_train_y, batch_size=16),
-        #     epochs=EPOCHS,
-        #     shuffle=True,
-        #     callbacks=[self.loss_callback]
-        # )
-        time_stop = time.time()
 
         test_accuracy = self.model.evaluate(x=data_test_x, y=data_test_y)
         print(f'Точность: {round(test_accuracy, 4)}')
-        print(f'Время обучения {round((time_stop - time_start) / 60, 2)} м.')
+        # print(f'Время обучения {round((time_stop - time_start) / 60, 2)} м.')
         # self.model.save_weights(self.WEIGHTS_FILE)
 
     def show_loss_graphic(self):
