@@ -3,8 +3,81 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
+from skimage.color import rgb2lab, lab2rgb
 
-from consts import IMAGES_ORIGINAL_PATH, IMAGES_RESIZED_COLORED_PATH, IMAGE_SIZE, IMAGES_RESIZED_GRAY_PATH
+from consts import IMAGES_ORIGINAL_PATH, IMAGE_SIZE, IMAGES_RESIZED_PATH
+
+
+class DatasetImage:
+    MAX_L = 100
+    MAX_AB = 128
+    MAX_RGB = 255
+
+    def __init__(self, rgb):
+        self.rgb = rgb  # denormalized
+        lab = self.rgb2lab(self.rgb)  # denormalized
+
+        self.l = self._normalize_l(self._get_l(lab))  # normalized
+        self.ab = self._normalize_ab(self._get_ab(lab))  # normalized
+        self.predicted_ab = None  # normalized
+
+    def set_predicted_ab(self, ab):
+        self.predicted_ab = ab
+
+    @staticmethod
+    def _get_l(lab):
+        return lab[:, :, 0:1]
+
+    @staticmethod
+    def _get_ab(lab):
+        return lab[:, :, 1:]
+
+    @staticmethod
+    def rgb2lab(rgb):
+        return rgb2lab(rgb)
+
+    def lab2rgb(self, lab):
+        rgb = lab2rgb(lab) * self.MAX_RGB
+        rgb = rgb.astype(np.uint8)
+        return rgb
+
+    def show_original_gray_image(self):
+        lab = self.build_lab(self._denormalize_l(self.l), np.zeros((IMAGE_SIZE, IMAGE_SIZE, 2)))
+        rgb = self.lab2rgb(lab)
+        self.show_image(rgb)
+
+    def show_predicted_image(self):
+        lab = self.build_lab(self._denormalize_l(self.l), self._denormalize_ab(self.predicted_ab))
+        rgb = self.lab2rgb(lab)
+        self.show_image(rgb)
+
+    def show_original_colored_image(self):
+        self.show_image(self.rgb)
+
+    @staticmethod
+    def show_image(rgb):
+        image = Image.fromarray(rgb)
+        plt.imshow(image)
+        plt.show()
+
+    @staticmethod
+    def build_lab(l, ab):
+        lab = np.zeros((IMAGE_SIZE, IMAGE_SIZE, 3))
+        lab[:, :, 0] = l[:, :, 0]
+        lab[:, :, 1:] = ab
+        return lab
+
+    def _normalize_l(self, l):
+        return l / self.MAX_L
+
+    def _normalize_ab(self, ab):
+        return ab / self.MAX_AB
+
+    def _denormalize_l(self, l):
+        return l * self.MAX_L
+
+    def _denormalize_ab(self, ab):
+        return ab * self.MAX_AB
 
 
 class ImageHandler:
@@ -15,80 +88,26 @@ class ImageHandler:
         При запуске автоматически нарезает и сохраняет картинки для датасета
         """
         self.filename = filename
+        self.dataset_image = None
+        self.set_dataset_image()
 
-        self.original_image_path = os.path.join(IMAGES_ORIGINAL_PATH, filename)
-        self.resized_colored_image_path = os.path.join(IMAGES_RESIZED_COLORED_PATH, self.filename)
-        self.resized_gray_image_path = os.path.join(IMAGES_RESIZED_GRAY_PATH, self.filename)
-
-        self.original_image = Image.open(self.original_image_path)
-
-        self.color_matrix = None
-        self.bw_matrix = None
-
-        self.prepare_dataset()
-        self.original_image.close()
-
-    def prepare_dataset(self):
+    def set_dataset_image(self):
         """
         Подготавливает изображения для датасета нейронной сети
         Генерирует два изображения с измененным размером - цветную и чёрно-белую
         """
 
-        if not os.path.exists(self.resized_colored_image_path):
-            resized_image = self.original_image.resize((IMAGE_SIZE, IMAGE_SIZE))
-            resized_image.save(self.resized_colored_image_path)
+        original_image_path = os.path.join(IMAGES_ORIGINAL_PATH, self.filename)
+        resized_image_path = os.path.join(IMAGES_RESIZED_PATH, self.filename)
+
+        original_image = Image.open(original_image_path)
+
+        if not os.path.exists(resized_image_path):
+            resized_image = original_image.resize((IMAGE_SIZE, IMAGE_SIZE))
+            resized_image.save(resized_image_path)
             image_color = resized_image
         else:
-            image_color = Image.open(self.resized_colored_image_path)
-
-        if not os.path.exists(self.resized_gray_image_path):
-            image_gray = image_color.convert('L')  # конвертация изображения в серые цвета
-            image_gray.save(self.resized_gray_image_path)
-        else:
-            image_gray = Image.open(self.resized_gray_image_path)
-
-        self.color_matrix = self.get_color_as_matrix(image_color)
-        self.bw_matrix = self.get_gray_as_matrix(image_gray)
-
+            image_color = Image.open(resized_image_path)
+        self.dataset_image = DatasetImage(np.array(image_color))
+        original_image.close()
         image_color.close()
-        image_gray.close()
-
-    def get_color_as_matrix(self, image_color):
-        """
-        Перевод цветной картинки в матрицу, где ячейки это [R, G, B]
-        Итоговый shape: (IMAGE_SIZE, IMAGE_SIZE, 3)
-        """
-        return self._get_as_matrix(image_color)
-
-    # @staticmethod
-    # def rgb2gray(rgb):
-    #     return np.dot(rgb[..., :3], [0.2989, 0.5870, 0.1140])
-
-    def get_gray_as_matrix(self, image_gray):
-        """
-        Перевод ЧБ картинки в матрицу, где ячейки это [G]
-        Итоговый shape: (IMAGE_SIZE, IMAGE_SIZE, 1)
-        """
-        matrix = self._get_as_matrix(image_gray)
-        return matrix.reshape(matrix.shape + (1,))
-
-    def _get_as_matrix(self, image):
-        return np.array(image) / 255
-
-    def show_color_image(self):
-        self._show_image(self.color_matrix)
-
-    def show_gray_image(self):
-        self._show_image(self.bw_matrix)
-
-    def _show_image(self, image):
-        image = image * 255
-        image = image.astype(np.uint8)
-        image = Image.fromarray(image)
-
-        show_image(image)
-
-
-def show_image(image):
-    plt.imshow(image)
-    plt.show()

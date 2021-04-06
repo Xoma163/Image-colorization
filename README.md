@@ -21,4 +21,7 @@ SET PATH=C:\tools\cuda\bin;%PATH%
 
 [Download 100 000 images](https://andrewsha.net/static/files/images_100k.zip) (10 GB)
 
+ToDo
+[Download pre-trained model](https://andrewsha.net/static/files/pre_trained_model.zip) ()
+
 Put dataset images in {{IMAGES_ORIGINAL_PATH}} (see in consts)
