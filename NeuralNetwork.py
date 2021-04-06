@@ -9,7 +9,7 @@ from tensorflow.python.keras.utils.multi_gpu_utils import multi_gpu_model
 
 from ImageHandler import DatasetImage
 from consts import LEARNING_PART, EPOCHS, IMAGE_SIZE
-from utils import CyclePercentWriter, lead_time_writer
+from utils import CyclePercentWriter, lead_time_writer, get_time_str
 
 
 class LossCallback(Callback):
@@ -17,11 +17,22 @@ class LossCallback(Callback):
         super().__init__()
         self.loss = {}
         self.cpw = CyclePercentWriter(EPOCHS, per=5)
+        self.last_epoch_start = time.time()
 
     def on_epoch_end(self, epoch, logs=None):
         self.loss[epoch] = (logs['loss'])
         if self.cpw.check(epoch):
-            print(f"Epoch {epoch}/{EPOCHS}. Loss {round(logs['loss'], 5)}")
+            time_now = time.time()
+            # Предсказание времени работы
+            epochs_remain = EPOCHS - epoch
+            epochs_per_trigger = self.cpw.per / 100 * EPOCHS
+            train_time = time_now - self.last_epoch_start
+            remaining_time = epochs_remain / epochs_per_trigger * train_time
+            print(f"Эпоха {epoch}/{EPOCHS}. "
+                  f"Ошибка {round(logs['loss'], 5)}. "
+                  f"Время обучения {get_time_str(train_time)}. "
+                  f"Осталось ~{get_time_str(remaining_time)}")
+            self.last_epoch_start = time_now
 
 
 class NeuralNetwork:
@@ -64,7 +75,6 @@ class NeuralNetwork:
         self.loss_callback = LossCallback()
 
     # def get_fit_data(self, data_train_x, data_train_y, batch_size=16):
-    #     # [data_train_x[i:i + batch_size] for i in range(0, len(data_train_x), batch_size)]\
     #     data = [(data_train_x[i:i + batch_size],data_train_y[i:i + batch_size]) for i in range(len(data_train_x), batch_size)]
     #     for x, y in data:
     #         yield x, y
@@ -96,10 +106,9 @@ class NeuralNetwork:
             verbose=False
         )
 
-        test_accuracy = self.model.evaluate(x=data_test_x, y=data_test_y)
-        print(f'Точность: {round(test_accuracy, 4)}')
-        # print(f'Время обучения {round((time_stop - time_start) / 60, 2)} м.')
-        # self.model.save_weights(self.WEIGHTS_FILE)
+        test_accuracy = self.model.evaluate(x=data_test_x, y=data_test_y, verbose=False)
+        print(f'Точность: {round(test_accuracy, 5)}')
+        self.model.save_weights(self.WEIGHTS_FILE)
 
     def show_loss_graphic(self):
         plt.plot(self.loss_callback.loss.keys(), self.loss_callback.loss.values())
