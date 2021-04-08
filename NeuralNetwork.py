@@ -127,7 +127,7 @@ class NeuralNetwork:
             x=data_train_x,
             y=data_train_y,
             epochs=EPOCHS,
-            batch_size=16 * self.GPUS_COUNT,
+            batch_size=16 * GPUS_COUNT,
             shuffle=True,
             callbacks=[self.loss_callback],
             verbose=False
