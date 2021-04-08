@@ -70,8 +70,7 @@ class NeuralNetwork:
 
         else:
             # strategy = tf.distribute.MultiWorkerMirroredStrategy()
-            strategy = tf.distribute.MirroredStrategy(devices=["/gpu:0", "/gpu:1", "/gpu:2", "/gpu:3"])
-
+            strategy = tf.distribute.MultiWorkerMirroredStrategy()
 
             with strategy.scope():
                 self.model = models.Sequential([
@@ -139,15 +138,16 @@ class NeuralNetwork:
         else:
             print(GPUS_COUNT)
             print("TRAIN MULTIGPU")
+
             data_train = tf.data.Dataset.from_tensor_slices((data_train_x, data_train_y))
             data_test = tf.data.Dataset.from_tensor_slices((data_test_x, data_test_y))
-
-            options = tf.data.Options()
-            options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
 
             batch_size = 32
             data_train = data_train.batch(batch_size)
             data_test = data_test.batch(batch_size)
+
+            options = tf.data.Options()
+            options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
 
             data_train = data_train.with_options(options)
             data_test = data_test.with_options(options)
@@ -158,7 +158,8 @@ class NeuralNetwork:
                 # batch_size=16 * GPUS_COUNT,
                 # shuffle=True,
                 # callbacks=[self.loss_callback],
-                verbose=True
+                # verbose=True,
+                validation_data=data_test
             )
 
         # test_accuracy = self.model.evaluate(x=data_test_x, y=data_test_y, verbose=False)

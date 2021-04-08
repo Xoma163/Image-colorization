@@ -4,13 +4,13 @@ import os
 IMAGE_SIZE = 64
 
 # Количество изображений в выборке (макс 100 000)
-IMAGES_COUNT = 35
+IMAGES_COUNT = 3500
 
 # Обучающая часть в долях
 LEARNING_PART = 0.7
 
 # Количество эпох
-EPOCHS = 10
+EPOCHS = 100
 
 # Количество видеокарт
 GPUS_COUNT = 4
