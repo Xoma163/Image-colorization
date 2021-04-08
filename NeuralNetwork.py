@@ -69,7 +69,9 @@ class NeuralNetwork:
             self.model.compile(optimizer=optimizers.Adam(), loss='mse')
 
         else:
-            strategy = tf.distribute.MultiWorkerMirroredStrategy()
+            # strategy = tf.distribute.MultiWorkerMirroredStrategy()
+            strategy = tf.distribute.MirroredStrategy(devices=["/gpu:0", "/gpu:1", "/gpu:2", "/gpu:3"])
+
 
             with strategy.scope():
                 self.model = models.Sequential([
@@ -159,8 +161,8 @@ class NeuralNetwork:
                 verbose=True
             )
 
-        test_accuracy = self.model.evaluate(x=data_test_x, y=data_test_y, verbose=False)
-        print(f'Точность: {round(test_accuracy, 5)}')
+        # test_accuracy = self.model.evaluate(x=data_test_x, y=data_test_y, verbose=False)
+        # print(f'Точность: {round(test_accuracy, 5)}')
         self.model.save_weights(self.WEIGHTS_FILE)
 
     def show_loss_graphic(self):
