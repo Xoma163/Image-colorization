@@ -1,12 +1,11 @@
-import os
 import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras import optimizers, layers, models
 from tensorflow.python.keras.callbacks import Callback
-from tensorflow.python.keras.utils.multi_gpu_utils import multi_gpu_model
-import tensorflow as tf
+
 from ImageHandler import DatasetImage
 from consts import LEARNING_PART, EPOCHS, IMAGE_SIZE, GPUS_COUNT
 from utils import CyclePercentWriter, lead_time_writer, get_time_str
@@ -40,6 +39,7 @@ class NeuralNetwork:
     Свёрточная нейронная сеть
     """
     WEIGHTS_FILE = 'model/model_weight'
+
     # https://github.com/keras-team/keras/issues/8123
 
     def __init__(self):
@@ -124,7 +124,7 @@ class NeuralNetwork:
         data_test_y = np.array(output_data[slicer_index:])
         del output_data
 
-        if GPUS_COUNT==1:
+        if GPUS_COUNT == 1:
             self.model.fit(
                 x=data_train_x,
                 y=data_train_y,
@@ -135,11 +135,14 @@ class NeuralNetwork:
                 verbose=False
             )
         else:
+            print(GPUS_COUNT)
+            print("TRAIN MULTIGPU")
             data_train = tf.data.Dataset.from_tensor_slices((data_train_x, data_train_y))
             data_test = tf.data.Dataset.from_tensor_slices((data_test_x, data_test_y))
 
             options = tf.data.Options()
             options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+
             batch_size = 32
             data_train = data_train.batch(batch_size)
             data_test = data_test.batch(batch_size)
@@ -151,9 +154,9 @@ class NeuralNetwork:
                 data_train,
                 epochs=EPOCHS,
                 # batch_size=16 * GPUS_COUNT,
-                shuffle=True,
-                callbacks=[self.loss_callback],
-                verbose=False
+                # shuffle=True,
+                # callbacks=[self.loss_callback],
+                verbose=True
             )
 
         test_accuracy = self.model.evaluate(x=data_test_x, y=data_test_y, verbose=False)
