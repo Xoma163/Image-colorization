@@ -21,7 +21,7 @@ export PATH="/usr/local/cuda-11.2/bin:$PATH"
 export LD_LIBRARY_PATH="/usr/local/cuda-11.2/lib64"
 
 # put this file to home directory
-wget https://developer.nvidia.com/compute/machine-learning/cudnn/secure/8.1.1.33/11.2_20210301/cudnn-11.2-linux-x64-v8.1.1.33.tgz
+# wget https://developer.nvidia.com/compute/machine-learning/cudnn/secure/8.1.1.33/11.2_20210301/cudnn-11.2-linux-x64-v8.1.1.33.tgz
 tar -xzvf cudnn-11.2-linux-x64-v8.1.0.77.tgz
 sudo cp cuda/include/cudnn*.h /usr/local/cuda/include
 sudo cp -P cuda/lib64/libcudnn* /usr/local/cuda/lib64
