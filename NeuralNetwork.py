@@ -6,9 +6,9 @@ import numpy as np
 from tensorflow.keras import optimizers, layers, models
 from tensorflow.python.keras.callbacks import Callback
 from tensorflow.python.keras.utils.multi_gpu_utils import multi_gpu_model
-
+import tensorflow as tf
 from ImageHandler import DatasetImage
-from consts import LEARNING_PART, EPOCHS, IMAGE_SIZE
+from consts import LEARNING_PART, EPOCHS, IMAGE_SIZE, GPUS_COUNT
 from utils import CyclePercentWriter, lead_time_writer, get_time_str
 
 
@@ -41,7 +41,6 @@ class NeuralNetwork:
     """
     WEIGHTS_FILE = 'model/model_weight'
     # https://github.com/keras-team/keras/issues/8123
-    GPUS_COUNT = int(os.getenv("GPUS_COUNT")) if os.getenv("GPUS_COUNT") else 1
 
     def __init__(self):
         model = models.Sequential([
@@ -65,10 +64,38 @@ class NeuralNetwork:
             layers.Conv2D(2, (3, 3), activation='relu', padding='same'),
             layers.UpSampling2D(2),
         ])
-        if self.GPUS_COUNT == 1:
+        if GPUS_COUNT == 1:
             self.model = model
+            self.model.compile(optimizer=optimizers.Adam(), loss='mse')
+
         else:
-            self.model = multi_gpu_model(model, gpus=self.GPUS_COUNT)
+            strategy = tf.distribute.MirroredStrategy()
+            with strategy.scope():
+                model = models.Sequential([
+                    layers.InputLayer(input_shape=(IMAGE_SIZE, IMAGE_SIZE, 1)),
+                    layers.Conv2D(16, (3, 3), activation='relu', padding='same'),
+                    layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
+                    layers.MaxPool2D(2),
+                    layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
+                    layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
+                    layers.MaxPool2D(2),
+                    layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
+                    layers.Conv2D(512, (3, 3), activation='relu', padding='same'),
+                    layers.MaxPool2D(2),
+                    layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
+                    layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
+                    layers.UpSampling2D(2),
+                    layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
+                    layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
+                    layers.UpSampling2D(2),
+                    layers.Conv2D(16, (3, 3), activation='relu', padding='same'),
+                    layers.Conv2D(2, (3, 3), activation='relu', padding='same'),
+                    layers.UpSampling2D(2),
+                ])
+                self.model = model
+                self.model.compile(optimizer=optimizers.Adam(), loss='mse')
+
+            self.model = multi_gpu_model(model, gpus=GPUS_COUNT)
         self.model.summary()
         self.model.compile(optimizer=optimizers.Adam(), loss='mse')
 

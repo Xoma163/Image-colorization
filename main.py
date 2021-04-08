@@ -1,11 +1,9 @@
 import os
 
-from dotenv import load_dotenv
-
 from ImageHandler import ImageHandler
 from NeuralNetwork import NeuralNetwork
-from consts import IMAGES_ORIGINAL_PATH, IMAGES_COUNT, IMAGES_RESIZED_PATH, LEARNING_PART
-from utils import CyclePercentWriter, lead_time_writer, get_time_str
+from consts import IMAGES_ORIGINAL_PATH, IMAGES_COUNT, LEARNING_PART, IMAGES_RESIZED_PATH
+from utils import CyclePercentWriter, lead_time_writer
 
 
 @lead_time_writer
@@ -22,7 +20,6 @@ def load_images():
 
 def setup():
     os.makedirs(IMAGES_RESIZED_PATH, exist_ok=True)
-    load_dotenv()
 
 
 if __name__ == '__main__':

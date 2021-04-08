@@ -16,10 +16,6 @@ sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/
 sudo apt-get update
 sudo apt-get -y install cuda
 
-
-export PATH="/usr/local/cuda-11.2/bin:$PATH"
-export LD_LIBRARY_PATH="/usr/local/cuda-11.2/lib64"
-
 # put this file to home directory
 # wget https://developer.nvidia.com/compute/machine-learning/cudnn/secure/8.1.1.33/11.2_20210301/cudnn-11.2-linux-x64-v8.1.1.33.tgz
 tar -xzvf cudnn-11.2-linux-x64-v8.1.0.77.tgz
@@ -29,10 +25,17 @@ sudo chmod a+r /usr/local/cuda/include/cudnn*.h /usr/local/cuda/lib64/libcudnn*
 
 sudo ln /usr/local/cuda-11.2/lib64/libcusolver.so.11 /usr/local/cuda-11.2/lib64/libcusolver.so.10
 
-sudo apt install git
+export PATH="/usr/local/cuda-11.2/bin:$PATH"
+export LD_LIBRARY_PATH=/usr/local/cuda-11.2/lib64
+export LD_LIBRARY_PATH=/usr/local/cuda-11.2/lib64:/usr/local/cuda-11/lib64
+
+sudo apt-get -y install git
+sudo apt-get -y install python3-venv
+sudo apt-get -y install unzip
+sudo apt-get -y install mc
+
 git clone https://github.com/Xoma163/Image-colorization.git
 cd Image-colorization/
-sudo apt-get install python3-venv
 python3 -m venv venv
 venv/bin/pip install --upgrade pip setuptools wheel
 venv/bin/pip install -r requirements.txt
