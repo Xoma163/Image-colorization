@@ -26,15 +26,13 @@ sudo chmod a+r /usr/local/cuda/include/cudnn*.h /usr/local/cuda/lib64/libcudnn*
 sudo ln /usr/local/cuda-11.2/lib64/libcusolver.so.11 /usr/local/cuda-11.2/lib64/libcusolver.so.10
 
 export PATH="/usr/local/cuda-11.2/bin:$PATH"
-export LD_LIBRARY_PATH=/usr/local/cuda-11.2/lib64
 export LD_LIBRARY_PATH=/usr/local/cuda-11.2/lib64:/usr/local/cuda-11/lib64
 
-sudo apt-get -y install git
-sudo apt-get -y install python3-venv
-sudo apt-get -y install unzip
-sudo apt-get -y install mc
+sudo apt-get -y install git python3-venv unzip mc
 
 git clone https://github.com/Xoma163/Image-colorization.git
+# put this file to home directory
+unzip original.zip -d Image-colorization/
 cd Image-colorization/
 python3 -m venv venv
 venv/bin/pip install --upgrade pip setuptools wheel

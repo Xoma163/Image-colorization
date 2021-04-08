@@ -9,7 +9,7 @@ from utils import CyclePercentWriter, lead_time_writer
 @lead_time_writer
 def load_images():
     dataset_images = []
-    cpw = CyclePercentWriter(IMAGES_COUNT, per=10)
+    cpw = CyclePercentWriter(IMAGES_COUNT, per=20)
     for i, image_path in enumerate(os.listdir(IMAGES_ORIGINAL_PATH)[:IMAGES_COUNT]):
         dataset_images.append(ImageHandler(image_path).dataset_image)
         if cpw.check(i):
@@ -20,6 +20,7 @@ def load_images():
 
 def setup():
     os.makedirs(IMAGES_RESIZED_PATH, exist_ok=True)
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 if __name__ == '__main__':
@@ -36,10 +37,10 @@ if __name__ == '__main__':
     nn.train(input_data, output_data)
     nn.show_loss_graphic()
 
-    test_images = images[0:2] + images[int(IMAGES_COUNT * LEARNING_PART):int(IMAGES_COUNT * LEARNING_PART) + 2]
-    nn.predict_many(test_images)
-
-    for image in test_images:
-        # image.show_original_gray_image()
-        image.show_predicted_image()
-        image.show_original_colored_image()
+    # test_images = images[0:2] + images[int(IMAGES_COUNT * LEARNING_PART):int(IMAGES_COUNT * LEARNING_PART) + 2]
+    # nn.predict_many(test_images)
+    #
+    # for image in test_images:
+    #     # image.show_original_gray_image()
+    #     image.show_predicted_image()
+    #     image.show_original_colored_image()

@@ -1,13 +1,21 @@
+import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
+
+from tensorflow.python.distribute.mirrored_strategy import MirroredStrategy
+from tensorflow.python.distribute.tpu_strategy import TPUStrategy
+
 import time
 
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import optimizers, layers, models
+from tensorflow.python.data.experimental import AutoShardPolicy
 from tensorflow.python.keras.callbacks import Callback
 
 from ImageHandler import DatasetImage
-from consts import LEARNING_PART, EPOCHS, IMAGE_SIZE, GPUS_COUNT
+from consts import LEARNING_PART, EPOCHS, IMAGE_SIZE, GPUS_COUNT, BATCH_SIZE, USE_TPU
 from utils import CyclePercentWriter, lead_time_writer, get_time_str
 
 
@@ -15,7 +23,7 @@ class LossCallback(Callback):
     def __init__(self):
         super().__init__()
         self.loss = {}
-        self.cpw = CyclePercentWriter(EPOCHS, per=5)
+        self.cpw = CyclePercentWriter(EPOCHS, per=10)
         self.last_epoch_start = time.time()
 
     def on_epoch_end(self, epoch, logs=None):
@@ -38,11 +46,12 @@ class NeuralNetwork:
     """
     Свёрточная нейронная сеть
     """
-    WEIGHTS_FILE = 'model/model_weight'
+    WEIGHTS_FILE = 'model/weights'
 
     # https://github.com/keras-team/keras/issues/8123
 
-    def __init__(self):
+    @staticmethod
+    def get_compiled_model():
         model = models.Sequential([
             layers.InputLayer(input_shape=(IMAGE_SIZE, IMAGE_SIZE, 1)),
             layers.Conv2D(16, (3, 3), activation='relu', padding='same'),
@@ -64,49 +73,63 @@ class NeuralNetwork:
             layers.Conv2D(2, (3, 3), activation='relu', padding='same'),
             layers.UpSampling2D(2),
         ])
-        if GPUS_COUNT == 1:
-            self.model = model
-            self.model.compile(optimizer=optimizers.Adam(), loss='mse')
+        model.compile(optimizer=optimizers.Adam(), loss='mse')
+        return model
 
+    def __init__(self):
+        print(f"Found devices:\n"
+              f"{[x.name for x in tf.config.list_logical_devices()]}")
+        if USE_TPU:
+            resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu='local')
+            tf.config.experimental_connect_to_cluster(resolver)
+            tf.tpu.experimental.initialize_tpu_system(resolver)
+            print("All devices: ", tf.config.list_logical_devices('TPU'))
+            self.strategy = TPUStrategy(resolver)
         else:
-            # strategy = tf.distribute.MultiWorkerMirroredStrategy()
-            strategy = tf.distribute.MultiWorkerMirroredStrategy()
+            self.strategy = MirroredStrategy()
 
-            with strategy.scope():
-                self.model = models.Sequential([
-                    layers.InputLayer(input_shape=(IMAGE_SIZE, IMAGE_SIZE, 1)),
-                    layers.Conv2D(16, (3, 3), activation='relu', padding='same'),
-                    layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
-                    layers.MaxPool2D(2),
-                    layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
-                    layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
-                    layers.MaxPool2D(2),
-                    layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
-                    layers.Conv2D(512, (3, 3), activation='relu', padding='same'),
-                    layers.MaxPool2D(2),
-                    layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
-                    layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
-                    layers.UpSampling2D(2),
-                    layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
-                    layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
-                    layers.UpSampling2D(2),
-                    layers.Conv2D(16, (3, 3), activation='relu', padding='same'),
-                    layers.Conv2D(2, (3, 3), activation='relu', padding='same'),
-                    layers.UpSampling2D(2),
-                ])
-                # self.model = multi_gpu_model(model,gpus=GPUS_COUNT)
-                self.model.compile(optimizer=optimizers.Adam(), loss='mse')
+        # if USE_TPU:
+        #     tpu_model = keras_to_tpu_model(
+        #         model,
+        #         strategy=tf.contrib.tpu.TPUDistributionStrategy(
+        #             tf.contrib.cluster_resolver.TPUClusterResolver(TPU_ADDRESS)))
+        if GPUS_COUNT == 1:
+            self.model = self.get_compiled_model()
+        else:
+            print('Number of devices: {}'.format(self.strategy.num_replicas_in_sync))
 
-            # self.model = multi_gpu_model(model, gpus=GPUS_COUNT)
-        self.model.summary()
-        self.model.compile(optimizer=optimizers.Adam(), loss='mse')
+            with self.strategy.scope():
+                self.model = self.get_compiled_model()
 
+        # self.model.summary()
         self.loss_callback = LossCallback()
 
-    # def get_fit_data(self, data_train_x, data_train_y, batch_size=16):
-    #     data = [(data_train_x[i:i + batch_size],data_train_y[i:i + batch_size]) for i in range(len(data_train_x), batch_size)]
-    #     for x, y in data:
-    #         yield x, y
+    @staticmethod
+    def prepare_datasets(input_data, output_data):
+        slicer_index = int(len(input_data) * LEARNING_PART)
+
+        train_data_x = np.array(input_data[:slicer_index])
+        test_data_x = np.array(input_data[slicer_index:])
+        del input_data
+
+        train_data_y = np.array(output_data[:slicer_index])
+        test_data_y = np.array(output_data[slicer_index:])
+        del output_data
+
+        train_data = tf.data.Dataset.from_tensor_slices((train_data_x, train_data_y))
+        test_data = tf.data.Dataset.from_tensor_slices((test_data_x, test_data_y))
+
+        train_data = train_data.shuffle(len(train_data_x), reshuffle_each_iteration=True)
+        train_data = train_data.batch(BATCH_SIZE, drop_remainder=True)
+
+        test_data = test_data.batch(BATCH_SIZE)
+
+        options = tf.data.Options()
+        options.experimental_distribute.auto_shard_policy = AutoShardPolicy.DATA
+
+        train_data = train_data.with_options(options)
+        test_data = test_data.with_options(options)
+        return train_data, test_data
 
     @lead_time_writer
     def train(self, input_data, output_data):
@@ -115,56 +138,22 @@ class NeuralNetwork:
         """
         # self.model.load_weights(self.WEIGHTS_FILE)
         # return
-        slicer_index = int(len(input_data) * LEARNING_PART)
-
-        data_train_x = np.array(input_data[:slicer_index])
-        data_test_x = np.array(input_data[slicer_index:])
-        del input_data
-
-        data_train_y = np.array(output_data[:slicer_index])
-        data_test_y = np.array(output_data[slicer_index:])
-        del output_data
-
-        if GPUS_COUNT == 1:
-            self.model.fit(
-                x=data_train_x,
-                y=data_train_y,
-                epochs=EPOCHS,
-                batch_size=16 * GPUS_COUNT,
-                shuffle=True,
-                callbacks=[self.loss_callback],
-                verbose=False
-            )
-        else:
-            print(GPUS_COUNT)
-            print("TRAIN MULTIGPU")
-
-            data_train = tf.data.Dataset.from_tensor_slices((data_train_x, data_train_y))
-            data_test = tf.data.Dataset.from_tensor_slices((data_test_x, data_test_y))
-
-            batch_size = 32
-            data_train = data_train.batch(batch_size)
-            data_test = data_test.batch(batch_size)
-
-            options = tf.data.Options()
-            options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
-
-            data_train = data_train.with_options(options)
-            data_test = data_test.with_options(options)
-
-            self.model.fit(
-                data_train,
-                epochs=EPOCHS,
-                # batch_size=16 * GPUS_COUNT,
-                # shuffle=True,
-                # callbacks=[self.loss_callback],
-                # verbose=True,
-                validation_data=data_test
-            )
+        train_data, test_data = self.prepare_datasets(input_data, output_data)
+        start_time = time.time()
+        self.model.fit(
+            train_data,
+            epochs=EPOCHS,
+            shuffle=True,
+            callbacks=[self.loss_callback],
+            verbose=True,
+            # validation_data=data_test
+        )
+        end_time = time.time()
+        print(f"АААААААААА {get_time_str(end_time - start_time)}")
 
         # test_accuracy = self.model.evaluate(x=data_test_x, y=data_test_y, verbose=False)
         # print(f'Точность: {round(test_accuracy, 5)}')
-        # self.model.save_weights(self.WEIGHTS_FILE)
+        self.model.save_weights(self.WEIGHTS_FILE)
 
     def show_loss_graphic(self):
         plt.plot(self.loss_callback.loss.keys(), self.loss_callback.loss.values())
