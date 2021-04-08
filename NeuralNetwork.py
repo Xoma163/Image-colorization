@@ -93,10 +93,10 @@ class NeuralNetwork:
                     layers.Conv2D(2, (3, 3), activation='relu', padding='same'),
                     layers.UpSampling2D(2),
                 ])
-                self.model = multi_gpu_model(model)
+                self.model = multi_gpu_model(model,gpus=GPUS_COUNT)
                 self.model.compile(optimizer=optimizers.Adam(), loss='mse')
 
-            self.model = multi_gpu_model(model, gpus=GPUS_COUNT)
+            # self.model = multi_gpu_model(model, gpus=GPUS_COUNT)
         self.model.summary()
         self.model.compile(optimizer=optimizers.Adam(), loss='mse')
 
