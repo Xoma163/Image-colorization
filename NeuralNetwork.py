@@ -69,7 +69,7 @@ class NeuralNetwork:
             self.model.compile(optimizer=optimizers.Adam(), loss='mse')
 
         else:
-            strategy = tf.distribute.MirroredStrategy()
+            strategy = tf.distribute.MultiWorkerMirroredStrategy()
 
             with strategy.scope():
                 self.model = models.Sequential([
@@ -124,15 +124,37 @@ class NeuralNetwork:
         data_test_y = np.array(output_data[slicer_index:])
         del output_data
 
-        self.model.fit(
-            x=data_train_x,
-            y=data_train_y,
-            epochs=EPOCHS,
-            batch_size=16 * GPUS_COUNT,
-            shuffle=True,
-            callbacks=[self.loss_callback],
-            verbose=False
-        )
+        if GPUS_COUNT==1:
+            self.model.fit(
+                x=data_train_x,
+                y=data_train_y,
+                epochs=EPOCHS,
+                batch_size=16 * GPUS_COUNT,
+                shuffle=True,
+                callbacks=[self.loss_callback],
+                verbose=False
+            )
+        else:
+            data_train = tf.data.Dataset.from_tensor_slices((data_train_x, data_train_y))
+            data_test = tf.data.Dataset.from_tensor_slices((data_test_x, data_test_y))
+
+            options = tf.data.Options()
+            options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+            batch_size = 32
+            data_train = data_train.batch(batch_size)
+            data_test = data_test.batch(batch_size)
+
+            data_train = data_train.with_options(options)
+            data_test = data_test.with_options(options)
+
+            self.model.fit(
+                data_train,
+                epochs=EPOCHS,
+                # batch_size=16 * GPUS_COUNT,
+                shuffle=True,
+                callbacks=[self.loss_callback],
+                verbose=False
+            )
 
         test_accuracy = self.model.evaluate(x=data_test_x, y=data_test_y, verbose=False)
         print(f'Точность: {round(test_accuracy, 5)}')
