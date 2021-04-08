@@ -69,10 +69,10 @@ class NeuralNetwork:
             self.model.compile(optimizer=optimizers.Adam(), loss='mse')
 
         else:
-            strategy = tf.distribute.MirroredStrategy(devices=["/gpu:0", "/gpu:1", "/gpu:2", "/gpu:3"])
+            strategy = tf.distribute.MirroredStrategy()
 
             with strategy.scope():
-                model = models.Sequential([
+                self.model = models.Sequential([
                     layers.InputLayer(input_shape=(IMAGE_SIZE, IMAGE_SIZE, 1)),
                     layers.Conv2D(16, (3, 3), activation='relu', padding='same'),
                     layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
@@ -93,7 +93,7 @@ class NeuralNetwork:
                     layers.Conv2D(2, (3, 3), activation='relu', padding='same'),
                     layers.UpSampling2D(2),
                 ])
-                self.model = multi_gpu_model(model,gpus=GPUS_COUNT)
+                # self.model = multi_gpu_model(model,gpus=GPUS_COUNT)
                 self.model.compile(optimizer=optimizers.Adam(), loss='mse')
 
             # self.model = multi_gpu_model(model, gpus=GPUS_COUNT)
