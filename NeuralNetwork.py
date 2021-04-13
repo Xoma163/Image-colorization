@@ -61,7 +61,9 @@ class NeuralNetwork:
             layers.MaxPool2D(2),
             layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(512, (3, 3), activation='relu', padding='same'),
+            # layers.Conv2D(1024, (3, 3), activation='relu', padding='same'),
             layers.MaxPool2D(2),
+            layers.Conv2D(512, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
             layers.UpSampling2D(2),
@@ -88,7 +90,7 @@ class NeuralNetwork:
             with strategy.scope():
                 self.model = self.get_compiled_model()
 
-        # self.model.summary()
+        self.model.summary()
         self.loss_callback = LossCallback()
 
     @staticmethod
@@ -132,7 +134,7 @@ class NeuralNetwork:
             epochs=EPOCHS,
             shuffle=True,
             callbacks=[self.loss_callback],
-            verbose=False,
+            verbose=True,
             # validation_data=data_test
         )
         end_time = time.time()
