@@ -120,7 +120,7 @@ class NeuralNetwork:
         test_data = tf.data.Dataset.from_tensor_slices((test_data_x, test_data_y))
 
         train_data = train_data.shuffle(len(train_data_x), reshuffle_each_iteration=True)
-        train_data = train_data.batch(BATCH_SIZE, drop_remainder=True)
+        train_data = train_data.batch(BATCH_SIZE)  # , drop_remainder=True)
 
         test_data = test_data.batch(BATCH_SIZE)
 

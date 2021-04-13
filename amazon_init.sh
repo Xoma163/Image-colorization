@@ -24,9 +24,9 @@ sudo cp -P cuda/lib64/libcudnn* /usr/local/cuda/lib64
 sudo chmod a+r /usr/local/cuda/include/cudnn*.h /usr/local/cuda/lib64/libcudnn*
 
 sudo ln /usr/local/cuda-11.2/lib64/libcusolver.so.11 /usr/local/cuda-11.2/lib64/libcusolver.so.10
+echo 'export PATH=/usr/local/cuda-11.2/bin:$PATH' >> ~/.bashrc
+echo 'export LD_LIBRARY_PATH=/usr/local/cuda-11.2/lib64:/usr/local/cuda-11/lib64' >> ~/.bashrc
 
-export PATH="/usr/local/cuda-11.2/bin:$PATH"
-export LD_LIBRARY_PATH=/usr/local/cuda-11.2/lib64:/usr/local/cuda-11/lib64
 
 sudo apt-get -y install git python3-venv unzip mc
 
@@ -37,3 +37,5 @@ cd Image-colorization/
 python3 -m venv venv
 venv/bin/pip install --upgrade pip setuptools wheel
 venv/bin/pip install -r requirements.txt
+
+sudo reboot

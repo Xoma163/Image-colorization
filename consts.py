@@ -13,10 +13,10 @@ LEARNING_PART = 0.7
 EPOCHS = 100
 
 # Размер batch
-BATCH_SIZE = 32
+BATCH_SIZE = 128
 
 # Количество видеокарт
-GPUS_COUNT = 100
+GPUS_COUNT = 1
 
 # Использовать тензорные ядра
 USE_TPU = False
