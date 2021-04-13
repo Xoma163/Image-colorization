@@ -3,7 +3,6 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 
 from tensorflow.python.distribute.mirrored_strategy import MirroredStrategy
-from tensorflow.python.distribute.tpu_strategy import TPUStrategy
 
 import time
 
@@ -15,7 +14,7 @@ from tensorflow.python.data.experimental import AutoShardPolicy
 from tensorflow.python.keras.callbacks import Callback
 
 from ImageHandler import DatasetImage
-from consts import LEARNING_PART, EPOCHS, IMAGE_SIZE, GPUS_COUNT, BATCH_SIZE, USE_TPU
+from consts import LEARNING_PART, EPOCHS, IMAGE_SIZE, GPUS_COUNT, BATCH_SIZE
 from utils import CyclePercentWriter, lead_time_writer, get_time_str
 
 
@@ -70,7 +69,7 @@ class NeuralNetwork:
             layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
             layers.UpSampling2D(2),
             layers.Conv2D(16, (3, 3), activation='relu', padding='same'),
-            layers.Conv2D(2, (3, 3), activation='relu', padding='same'),
+            layers.Conv2D(1, (3, 3), activation='relu', padding='same'),
             layers.UpSampling2D(2),
         ])
         model.compile(optimizer=optimizers.Adam(), loss='mse')
@@ -79,26 +78,14 @@ class NeuralNetwork:
     def __init__(self):
         print(f"Found devices:\n"
               f"{[x.name for x in tf.config.list_logical_devices()]}")
-        if USE_TPU:
-            resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu='local')
-            tf.config.experimental_connect_to_cluster(resolver)
-            tf.tpu.experimental.initialize_tpu_system(resolver)
-            print("All devices: ", tf.config.list_logical_devices('TPU'))
-            self.strategy = TPUStrategy(resolver)
-        else:
-            self.strategy = MirroredStrategy()
 
-        # if USE_TPU:
-        #     tpu_model = keras_to_tpu_model(
-        #         model,
-        #         strategy=tf.contrib.tpu.TPUDistributionStrategy(
-        #             tf.contrib.cluster_resolver.TPUClusterResolver(TPU_ADDRESS)))
         if GPUS_COUNT == 1:
             self.model = self.get_compiled_model()
         else:
-            print('Number of devices: {}'.format(self.strategy.num_replicas_in_sync))
+            strategy = MirroredStrategy()
+            print('Number of devices: {}'.format(strategy.num_replicas_in_sync))
 
-            with self.strategy.scope():
+            with strategy.scope():
                 self.model = self.get_compiled_model()
 
         # self.model.summary()
@@ -145,7 +132,7 @@ class NeuralNetwork:
             epochs=EPOCHS,
             shuffle=True,
             callbacks=[self.loss_callback],
-            verbose=True,
+            verbose=False,
             # validation_data=data_test
         )
         end_time = time.time()
