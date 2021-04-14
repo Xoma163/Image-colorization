@@ -15,7 +15,9 @@ from tensorflow.python.keras.callbacks import Callback
 
 from ImageHandler import DatasetImage
 from consts import LEARNING_PART, EPOCHS, IMAGE_SIZE, GPUS_COUNT, BATCH_SIZE
-from utils import CyclePercentWriter, lead_time_writer, get_time_str
+from utils import CyclePercentWriter, lead_time_writer, get_time_str, get_logger
+
+logger = get_logger(__name__)
 
 
 class LossCallback(Callback):
@@ -27,17 +29,19 @@ class LossCallback(Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         self.loss[epoch] = (logs['loss'])
-        if self.cpw.check(epoch):
+        if self.cpw.check(epoch+1):
             time_now = time.time()
             # Предсказание времени работы
             epochs_remain = EPOCHS - epoch
             epochs_per_trigger = self.cpw.per / 100 * EPOCHS
             train_time = time_now - self.last_epoch_start
             remaining_time = epochs_remain / epochs_per_trigger * train_time
-            print(f"Эпоха {epoch}/{EPOCHS}. "
-                  f"Ошибка {round(logs['loss'], 5)}. "
-                  f"Время обучения {get_time_str(train_time)}. "
-                  f"Осталось ~{get_time_str(remaining_time)}")
+            logger.debug(
+                f"Эпоха {epoch+1}/{EPOCHS}. "
+                f"Ошибка {round(logs['loss'], 5)}. "
+                f"Время обучения {get_time_str(train_time)}. "
+                f"Осталось ~{get_time_str(remaining_time)}"
+            )
             self.last_epoch_start = time_now
 
 
@@ -78,14 +82,13 @@ class NeuralNetwork:
         return model
 
     def __init__(self):
-        print(f"Found devices:\n"
-              f"{[x.name for x in tf.config.list_logical_devices()]}")
+        logger.info(f"Found devices: {[x.name for x in tf.config.list_logical_devices()]}")
 
         if GPUS_COUNT == 1:
             self.model = self.get_compiled_model()
         else:
             strategy = MirroredStrategy()
-            print('Number of devices: {}'.format(strategy.num_replicas_in_sync))
+            logger.info('Number of devices: {}'.format(strategy.num_replicas_in_sync))
 
             with strategy.scope():
                 self.model = self.get_compiled_model()
@@ -128,7 +131,6 @@ class NeuralNetwork:
         # self.model.load_weights(self.WEIGHTS_FILE)
         # return
         train_data, test_data = self.prepare_datasets(input_data, output_data)
-        start_time = time.time()
         self.model.fit(
             train_data,
             epochs=EPOCHS,
@@ -137,11 +139,8 @@ class NeuralNetwork:
             verbose=True,
             # validation_data=data_test
         )
-        end_time = time.time()
-        print(f"АААААААААА {get_time_str(end_time - start_time)}")
-
         # test_accuracy = self.model.evaluate(x=data_test_x, y=data_test_y, verbose=False)
-        # print(f'Точность: {round(test_accuracy, 5)}')
+        # logger.info(f'Точность: {round(test_accuracy, 5)}')
         self.model.save_weights(self.WEIGHTS_FILE)
 
     def show_loss_graphic(self):

@@ -28,3 +28,8 @@ IMAGES_ORIGINAL_PATH = os.path.join(IMAGES_PATH, 'original/')
 
 # Картинки с изменённым размером
 IMAGES_RESIZED_PATH = os.path.join(IMAGES_PATH, 'resized/', f'{IMAGE_SIZE}x{IMAGE_SIZE}/')
+
+# Директория с логами
+LOGS_DIR = 'logs/'
+
+LOGS_INFO_FILE = os.path.join(LOGS_DIR, 'info.log')

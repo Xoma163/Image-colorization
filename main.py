@@ -1,15 +1,20 @@
 import os
+from multiprocessing import cpu_count
 
 from joblib import Parallel, delayed
 
+import utils
 from ImageHandler import ImageHandler
 from NeuralNetwork import NeuralNetwork
-from consts import IMAGES_ORIGINAL_PATH, IMAGES_COUNT, LEARNING_PART, IMAGES_RESIZED_PATH
+from consts import IMAGES_ORIGINAL_PATH, IMAGES_COUNT, LEARNING_PART, IMAGES_RESIZED_PATH, LOGS_DIR
 from utils import lead_time_writer
-from multiprocessing import cpu_count
+
+logger = utils.get_logger(__name__)
+
 
 def setup():
     os.makedirs(IMAGES_RESIZED_PATH, exist_ok=True)
+    os.makedirs(LOGS_DIR, exist_ok=True)
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
@@ -45,17 +50,15 @@ def predict_from_test(images, count=3):
 
 if __name__ == '__main__':
     setup()
-
-    print('load images')
+    logger.debug('load images')
     dataset_images = load_images()
     input_data = [x.l for x in dataset_images]
     output_data = [x.ab for x in dataset_images]
-
-    print('init NN')
+    logger.debug('init nn')
     nn = NeuralNetwork()
-    print('train NN')
+    logger.debug('train nn')
     nn.train(input_data, output_data)
     nn.show_loss_graphic()
 
-    predict_from_train(dataset_images, 3)
-    predict_from_test(dataset_images, 3)
+    # predict_from_train(dataset_images, 3)
+    # predict_from_test(dataset_images, 3)

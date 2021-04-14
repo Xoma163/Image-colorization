@@ -6,3 +6,4 @@ venv/*
 images/*
 model/*
 .env
+logs/*
