@@ -80,7 +80,7 @@ def decl_of_num(number, titles):
         return titles[cases[5]]
 
 
-_log_format = "%(asctime)s - [%(levelname)-8s] - %(filename)-20s:%(lineno)-3d - %(message)s"
+_log_format = "%(asctime)s - [%(levelname)-8s] - %(name)-15s:%(lineno)-3d - %(message)s"
 # _log_format = "%(asctime)s - [%(levelname)s] - %(name)s - %(filename)s:%(lineno)d - %(message)s"
 
 
