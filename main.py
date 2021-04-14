@@ -3,18 +3,15 @@ from multiprocessing import cpu_count
 
 from joblib import Parallel, delayed
 
-import utils
 from ImageHandler import ImageHandler
 from NeuralNetwork import NeuralNetwork
-from consts import IMAGES_ORIGINAL_PATH, IMAGES_COUNT, LEARNING_PART, IMAGES_RESIZED_PATH, LOGS_DIR
-from utils import lead_time_writer
+from consts import IMAGES_ORIGINAL_PATH, IMAGES_COUNT, LEARNING_PART
+from utils import lead_time_writer, get_logger
 
-logger = utils.get_logger(__name__)
+logger = get_logger(__name__)
 
 
 def setup():
-    os.makedirs(IMAGES_RESIZED_PATH, exist_ok=True)
-    os.makedirs(LOGS_DIR, exist_ok=True)
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 

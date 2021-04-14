@@ -29,7 +29,7 @@ class LossCallback(Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         self.loss[epoch] = (logs['loss'])
-        if self.cpw.check(epoch+1):
+        if self.cpw.check(epoch + 1):
             time_now = time.time()
             # Предсказание времени работы
             epochs_remain = EPOCHS - epoch
@@ -37,7 +37,7 @@ class LossCallback(Callback):
             train_time = time_now - self.last_epoch_start
             remaining_time = epochs_remain / epochs_per_trigger * train_time
             logger.debug(
-                f"Эпоха {epoch+1}/{EPOCHS}. "
+                f"Эпоха {epoch + 1}/{EPOCHS}. "
                 f"Ошибка {round(logs['loss'], 5)}. "
                 f"Время обучения {get_time_str(train_time)}. "
                 f"Осталось ~{get_time_str(remaining_time)}"

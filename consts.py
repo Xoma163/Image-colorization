@@ -33,3 +33,6 @@ IMAGES_RESIZED_PATH = os.path.join(IMAGES_PATH, 'resized/', f'{IMAGE_SIZE}x{IMAG
 LOGS_DIR = 'logs/'
 
 LOGS_INFO_FILE = os.path.join(LOGS_DIR, 'info.log')
+
+os.makedirs(LOGS_DIR, exist_ok=True)
+os.makedirs(IMAGES_RESIZED_PATH, exist_ok=True)

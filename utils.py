@@ -81,6 +81,8 @@ def decl_of_num(number, titles):
 
 
 _log_format = "%(asctime)s - [%(levelname)-8s] - %(name)-15s:%(lineno)-3d - %(message)s"
+
+
 # _log_format = "%(asctime)s - [%(levelname)s] - %(name)s - %(filename)s:%(lineno)d - %(message)s"
 
 
