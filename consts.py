@@ -10,7 +10,7 @@ IMAGES_COUNT = 30000
 LEARNING_PART = 0.7
 
 # Количество эпох
-EPOCHS = 200
+EPOCHS = 100
 
 # Размер batch
 BATCH_SIZE = 128
