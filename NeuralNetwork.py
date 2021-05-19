@@ -53,28 +53,55 @@ class NeuralNetwork:
 
     # https://github.com/keras-team/keras/issues/8123
 
-    @staticmethod
-    def get_compiled_model():
+    def build_lab(self, ab):
+        l = np.ones((64, 64, 1)) / 2
+        lab = np.zeros((IMAGE_SIZE, IMAGE_SIZE, 3))
+        ab = ab.numpy()[0]
+        lab[:, :, 0] = l[:, :, 0]
+        lab[:, :, 1:] = ab
+        return lab
+
+    def ssim_loss(self, ab_true, ab_pred):
+        # return tf.reduce_mean(tf.image.ssim(ab_true, ab_pred, 1.0))
+        # rgbs_true = []
+        # rgbs_pred = []
+        # for i in range(len(ab_true)):
+        #     lab_true = self.build_lab(ab_true[i])
+        #     lab_pred = self.build_lab(ab_pred[i])
+        #     rgb_true = lab2rgb(lab_true)
+        #     rgb_pred = lab2rgb(lab_pred)
+        #     rgbs_true.append(rgb_true)
+        #     rgbs_pred.append(rgb_pred)
+        #
+        # rgbs_true = np.array(rgbs_true)
+        # rgbs_pred = np.array(rgbs_pred)
+
+        # ssim = tf.image.ssim(rgbs_true, rgbs_pred, 1.0)
+        ssim2 = tf.image.ssim(ab_true, ab_pred, 1.0)
+        # reduce_mean = tf.reduce_mean(ssim)
+        reduce_mean2 = tf.reduce_mean(ssim2)
+        # print(type(ssim))
+        # print(ssim.shape)
+        # print(reduce_mean)
+        # print('-----')
+        # print(type(ssim2))
+        # print(ssim2.shape)
+        # print(reduce_mean2)
+
+        return reduce_mean2
+
+    def get_compiled_model(self):
         model = models.Sequential([
             layers.InputLayer(input_shape=(IMAGE_SIZE, IMAGE_SIZE, 1)),
             layers.Conv2D(16, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
             layers.MaxPool2D(2),
             layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
-            layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
-            layers.MaxPool2D(2),
-            layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
-            layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
             layers.MaxPool2D(2),
             layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
-            layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
-            layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
+            layers.Conv2D(512, (3, 3), activation='relu', padding='same'),
             layers.MaxPool2D(2),
-            layers.Conv2D(512, (3, 3), activation='relu', padding='same'),
-            layers.Conv2D(512, (3, 3), activation='relu', padding='same'),
-            layers.Conv2D(512, (3, 3), activation='relu', padding='same'),
-            layers.UpSampling2D(2),
             layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
             layers.UpSampling2D(2),
             layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
@@ -86,7 +113,8 @@ class NeuralNetwork:
             layers.Conv2D(2, (3, 3), activation='relu', padding='same'),
 
         ])
-        model.compile(optimizer=optimizers.Adam(), loss='mse')
+        model.compile(optimizer=optimizers.Adam(), loss='mse', run_eagerly=True)
+        # model.compile(optimizer=optimizers.Adam(), loss = self.custom_loss_wrapper)
         return model
 
     def __init__(self):
@@ -101,13 +129,12 @@ class NeuralNetwork:
             with strategy.scope():
                 self.model = self.get_compiled_model()
 
-        self.model.summary()
+        # self.model.summary()
         self.loss_callback = LossCallback()
 
     @staticmethod
     def prepare_datasets(input_data, output_data):
         slicer_index = int(len(input_data) * LEARNING_PART)
-
         train_data_x = np.array(input_data[:slicer_index])
         test_data_x = np.array(input_data[slicer_index:])
         del input_data

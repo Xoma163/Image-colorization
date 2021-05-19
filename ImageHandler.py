@@ -20,6 +20,14 @@ class DatasetImage:
         self.ab = self._normalize_ab(self._get_ab(lab))  # normalized
         self.predicted_ab = None  # normalized
 
+    @property
+    def a(self):
+        return self.ab[:, :, :1]
+
+    @property
+    def b(self):
+        return self.ab[:, :, 1:]
+
     def set_predicted_ab(self, ab):
         self.predicted_ab = ab
 
@@ -40,18 +48,27 @@ class DatasetImage:
         rgb = rgb.astype(np.uint8)
         return rgb
 
+    def get_original_gray_image(self):
+        return self.build_lab(self._denormalize_l(self.l), np.zeros((IMAGE_SIZE, IMAGE_SIZE, 2)))
+
     def show_original_gray_image(self):
-        lab = self.build_lab(self._denormalize_l(self.l), np.zeros((IMAGE_SIZE, IMAGE_SIZE, 2)))
+        lab = self.get_original_gray_image()
         rgb = self.lab2rgb(lab)
         self.show_image(rgb)
+
+    def get_predicted_image(self):
+        return self.build_lab(self._denormalize_l(self.l), self._denormalize_ab(self.predicted_ab))
 
     def show_predicted_image(self):
-        lab = self.build_lab(self._denormalize_l(self.l), self._denormalize_ab(self.predicted_ab))
+        lab = self.get_predicted_image()
         rgb = self.lab2rgb(lab)
         self.show_image(rgb)
 
+    def get_original_colored_image(self):
+        return self.build_lab(self._denormalize_l(self.l), self._denormalize_ab(self.ab))
+
     def show_original_colored_image(self):
-        lab = self.build_lab(self._denormalize_l(self.l), self._denormalize_ab(self.ab))
+        lab = self.get_original_colored_image()
         rgb = self.lab2rgb(lab)
         self.show_image(rgb)
 
@@ -72,14 +89,14 @@ class DatasetImage:
         return l / self.MAX_L
 
     def _normalize_ab(self, ab):
-        return ab / self.MAX_AB
-
+        # return ab / self.MAX_AB
+        return ab/self.MAX_AB/2+0.5
     def _denormalize_l(self, l):
         return l * self.MAX_L
 
     def _denormalize_ab(self, ab):
-        return ab * self.MAX_AB
-
+        # return ab * self.MAX_AB
+        return (ab-0.5)*2*self.MAX_AB
 
 class ImageHandler:
 
