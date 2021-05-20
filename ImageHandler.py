@@ -90,13 +90,15 @@ class DatasetImage:
 
     def _normalize_ab(self, ab):
         # return ab / self.MAX_AB
-        return ab/self.MAX_AB/2+0.5
+        return ab / self.MAX_AB / 2 + 0.5
+
     def _denormalize_l(self, l):
         return l * self.MAX_L
 
     def _denormalize_ab(self, ab):
         # return ab * self.MAX_AB
-        return (ab-0.5)*2*self.MAX_AB
+        return (ab - 0.5) * 2 * self.MAX_AB
+
 
 class ImageHandler:
 
