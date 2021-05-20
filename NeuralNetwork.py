@@ -23,12 +23,14 @@ logger = get_logger(__name__)
 class LossCallback(Callback):
     def __init__(self):
         super().__init__()
-        self.loss = {}
-        self.cpw = CyclePercentWriter(EPOCHS, per=10)
+        self.loss_train = {}
+        self.loss_test = {}
+        self.cpw = CyclePercentWriter(EPOCHS, per=5)
         self.last_epoch_start = time.time()
 
     def on_epoch_end(self, epoch, logs=None):
-        self.loss[epoch] = (logs['loss'])
+        self.loss_train[epoch + 1] = (logs['loss'])
+        self.loss_test[epoch + 1] = (logs['val_loss'])
         if self.cpw.check(epoch + 1):
             time_now = time.time()
             # Предсказание времени работы
@@ -38,7 +40,8 @@ class LossCallback(Callback):
             remaining_time = epochs_remain / epochs_per_trigger * train_time
             logger.debug(
                 f"Эпоха {epoch + 1}/{EPOCHS}. "
-                f"Ошибка {round(logs['loss'], 5)}. "
+                f"Ошибка обучения {round(logs['loss'], 5)}. "
+                f"Ошибка тестирования {round(logs['val_loss'], 5)}. "
                 f"Время обучения {get_time_str(train_time)}. "
                 f"Осталось ~{get_time_str(remaining_time)}"
             )
@@ -102,6 +105,8 @@ class NeuralNetwork:
             layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(512, (3, 3), activation='relu', padding='same'),
             layers.MaxPool2D(2),
+            layers.Conv2D(512, (3, 3), activation='relu', padding='same'),
+            layers.Conv2D(512, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
             layers.UpSampling2D(2),
             layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
@@ -113,8 +118,12 @@ class NeuralNetwork:
             layers.Conv2D(2, (3, 3), activation='relu', padding='same'),
 
         ])
-        model.compile(optimizer=optimizers.Adam(), loss='mse', run_eagerly=True)
-        # model.compile(optimizer=optimizers.Adam(), loss = self.custom_loss_wrapper)
+        model.compile(
+            optimizer=optimizers.Adam(),
+            loss='mse',
+            # run_eagerly=True,
+            # metrics=['accuracy']
+        )
         return model
 
     def __init__(self):
@@ -171,15 +180,33 @@ class NeuralNetwork:
             epochs=EPOCHS,
             shuffle=True,
             callbacks=[self.loss_callback],
-            verbose=True,
-            # validation_data=data_test
+            verbose=False,
+            validation_data=test_data
         )
-        # test_accuracy = self.model.evaluate(x=data_test_x, y=data_test_y, verbose=False)
-        # logger.info(f'Точность: {round(test_accuracy, 5)}')
         self.model.save_weights(self.WEIGHTS_FILE)
+        self.show_loss_graphics()
 
-    def show_loss_graphic(self):
-        plt.plot(self.loss_callback.loss.keys(), self.loss_callback.loss.values())
+    def show_loss_graphics(self):
+        offset = 0
+        max_y = 0.005
+
+        axes = plt.gca()
+        axes.set_ylim([0, max_y])
+
+        plt.title('График величины ошибки от эпохи')
+        plt.xlabel('Эпоха')
+        plt.ylabel('Ошибка')
+        plt.plot(
+            list(self.loss_callback.loss_train.keys())[offset:],
+            list(self.loss_callback.loss_train.values())[offset:],
+            label='Обучение'
+        )
+        plt.plot(
+            list(self.loss_callback.loss_test.keys())[offset:],
+            list(self.loss_callback.loss_test.values())[offset:],
+            label='Тест'
+        )
+        plt.legend()
         plt.show()
 
     def _predict_image(self, image: DatasetImage):
