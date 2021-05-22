@@ -29,10 +29,10 @@ Put dataset images in {{IMAGES_ORIGINAL_PATH}} (see in consts)
 ### Setup 
 
 ```
-sudo ln -s "$PWD/config/server/image_colorization.service" /etc/systemd/system/
+sudo ln -s "$PWD/config/image_colorization.service" /etc/systemd/system/
 ```
 
 ```
-sudo ln -s "$PWD/config/server/nn.andrewsha.net.conf" /etc/nginx/sites-available/ 
-sudo ln -s "$PWD/config/server/nn.andrewsha.net.conf" /etc/nginx/sites-enabled/
+sudo ln -s "$PWD/config/nn.andrewsha.net.conf" /etc/nginx/sites-available/ 
+sudo ln -s "$PWD/config/nn.andrewsha.net.conf" /etc/nginx/sites-enabled/
 ```
