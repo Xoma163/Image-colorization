@@ -17,9 +17,12 @@ SET PATH=C:\tools\cuda\bin;%PATH%
 
 
 ### Dataset
-[Download 10 000 images](https://andrewsha.net/static/files/images_10k.zip) (1 GB)
+[Download 10 000 images](https://andrewsha.net/static/files/images_10k.zip) (~1 GB)
 
-[Download 100 000 images](https://andrewsha.net/static/files/images_100k.zip) (10 GB)
+[Download 100 000 images](https://andrewsha.net/static/files/images_100k.zip) (~10 GB)
+
+
+[Download 64x64 100 000 images for testing](https://andrewsha.net/static/files/images_64x64_100k.zip) (~170 MB)
 
 ToDo
 [Download pre-trained model](https://andrewsha.net/static/files/pre_trained_model.zip) ()
