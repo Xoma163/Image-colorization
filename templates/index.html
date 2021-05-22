@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+
+  <img style="width:300px" src="{{ image_black }}">
+  <img style="width:300px"  src="{{ image_colored }}">
+  <form method="POST" action="/" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="input_image">
+    <button type="submit">Колоризовать</button>
+  </form>
+{% endblock %}

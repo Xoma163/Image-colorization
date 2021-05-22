@@ -20,7 +20,9 @@ from .consts import LEARNING_PART, EPOCHS, IMAGE_SIZE, GPUS_COUNT, BATCH_SIZE
 from .utils import CyclePercentWriter, lead_time_writer, get_time_str, get_logger
 
 logger = get_logger(__name__)
-
+physical_devices = tf.config.experimental.list_physical_devices('GPU')
+assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
+config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 class LossCallback(Callback):
     def __init__(self):
@@ -54,7 +56,8 @@ class NeuralNetwork:
     """
     Свёрточная нейронная сеть
     """
-    WEIGHTS_FILE = 'apps/nn/model/weights'
+    # WEIGHTS_FILE = 'apps/nn/model/weights'
+    WEIGHTS_FILE = 'apps/nn/very_good_model/weights'
 
     # https://github.com/keras-team/keras/issues/8123
 
@@ -128,6 +131,8 @@ class NeuralNetwork:
 
     def __init__(self):
         logger.info(f"Found devices: {[x.name for x in tf.config.list_logical_devices()]}")
+
+
 
         if GPUS_COUNT == 1:
             self.model = self.get_compiled_model()

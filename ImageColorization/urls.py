@@ -16,6 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from apps.nn.views import PredictImageTemplateView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', PredictImageTemplateView.as_view())
 ]

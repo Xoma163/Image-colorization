@@ -1,0 +1,24 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  {#  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">#}
+  <title>{% block title %}Колоризация изображений{% endblock %}</title>
+  {% block meta %}{% endblock %}
+  {#  <link rel="stylesheet" href="{% static 'fonts/fonts.css' %}">#}
+  {#  {% render_bundle 'app' 'css' %}#}
+
+</head>
+<body>
+{#{% include 'chunks/header.html' %}#}
+{#{% include 'chunks/top_menu.html' %}#}
+{% block content %}
+{% endblock %}
+{#{% include 'chunks/footer.html' %}#}
+<!--/succ-order popup-->
+{#{% render_bundle 'app' 'js' %}#}
+</body>
+</html>
