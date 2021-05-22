@@ -1,5 +1,6 @@
 import os
 
+from ImageColorization.settings import DEBUG
 from .ImageHandler import DatasetImage
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
@@ -57,8 +58,8 @@ class NeuralNetwork:
     """
     Свёрточная нейронная сеть
     """
-    # WEIGHTS_FILE = 'apps/nn/model/weights'
-    WEIGHTS_FILE = 'apps/nn/very_good_model/weights'
+    WEIGHTS_FILE = 'apps/nn/model/weights'
+    TRAINED_WEIGHTS_FILE = 'apps/nn/trained_model/weights'
 
     # https://github.com/keras-team/keras/issues/8123
 
@@ -174,8 +175,8 @@ class NeuralNetwork:
         return train_data, test_data
 
     def load_model(self):
-        self.model.load_weights(self.WEIGHTS_FILE)
-        return
+        file = self.WEIGHTS_FILE if DEBUG else self.TRAINED_WEIGHTS_FILE
+        self.model.load_weights(file)
 
     @lead_time_writer
     def train(self, input_data, output_data):
@@ -183,7 +184,7 @@ class NeuralNetwork:
         Обучение модели
         """
         train_data, test_data = self.prepare_datasets(input_data, output_data)
-        K.set_value(self.model.optimizer.learning_rate, 0.00075)  # Ошибка обучения 0.0005. Ошибка тестирования 0.00299.
+        K.set_value(self.model.optimizer.learning_rate, 0.001)  # Ошибка обучения 0.0005. Ошибка тестирования 0.00299.
         self.model.fit(
             train_data,
             epochs=EPOCHS,
