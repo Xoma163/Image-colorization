@@ -5,10 +5,10 @@ from multiprocessing import cpu_count
 from django.core.management import BaseCommand
 from joblib import Parallel, delayed
 
-from apps.nn.ImageHandler import ImageHandler
-from apps.nn.NeuralNetwork import NeuralNetwork
-from apps.nn.consts import IMAGES_ORIGINAL_PATH, IMAGES_COUNT, LEARNING_PART
-from apps.nn.utils import lead_time_writer
+from ...ImageHandler import ImageHandler
+from ...NeuralNetwork import NeuralNetwork
+from ...consts import IMAGES_ORIGINAL_PATH, IMAGES_COUNT, LEARNING_PART
+from ...utils import lead_time_writer
 
 logger = logging.getLogger('nn')
 

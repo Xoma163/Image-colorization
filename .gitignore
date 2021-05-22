@@ -10,3 +10,4 @@ logs/*
 db.sqlite3
 ImageColorization.pid
 .env
+static/

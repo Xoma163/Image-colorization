@@ -8,7 +8,7 @@ from django.shortcuts import render
 from django.views import View
 
 from apps.nn.ImageHandler import DatasetImage
-from apps.nn.apps import nn
+from apps.nn.apps import NnConfig
 from apps.nn.consts import IMAGE_SIZE
 
 
@@ -29,7 +29,7 @@ class PredictImageTemplateView(View):
     @staticmethod
     def predict_image(image_file) -> Image:
         d_image = DatasetImage(np.array(image_file))
-        nn.predict(d_image)
+        NnConfig.nn.predict(d_image)
         predicted_image_lab_array = d_image.get_predicted_image()
         predicted_image_rgb_array = d_image.lab2rgb(predicted_image_lab_array)
         predicted_image_array = predicted_image_rgb_array.astype(np.uint8)

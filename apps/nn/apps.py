@@ -2,12 +2,11 @@ from django.apps import AppConfig
 
 from apps.nn.NeuralNetwork import NeuralNetwork
 
-nn = NeuralNetwork()
-
 
 class NnConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'apps.nn'
+    nn = NeuralNetwork()
 
     def ready(self):
-        nn.load_model()
+        NnConfig.nn.load_model()
