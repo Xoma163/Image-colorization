@@ -21,8 +21,9 @@ from .utils import CyclePercentWriter, lead_time_writer, get_time_str, get_logge
 
 logger = get_logger(__name__)
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
-assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
-config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
+# assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
+for p_device in physical_devices:
+    config = tf.config.experimental.set_memory_growth(p_device, True)
 
 class LossCallback(Callback):
     def __init__(self):
