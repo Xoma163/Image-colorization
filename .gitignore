@@ -8,3 +8,4 @@ model/*
 .env
 logs/*
 db.sqlite3
+ImageColorization.pid

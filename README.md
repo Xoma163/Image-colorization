@@ -25,3 +25,14 @@ ToDo
 [Download pre-trained model](https://andrewsha.net/static/files/pre_trained_model.zip) ()
 
 Put dataset images in {{IMAGES_ORIGINAL_PATH}} (see in consts)
+
+### Setup 
+
+```
+sudo ln -s "$PWD/config/server/image_colorization.service" /etc/systemd/system/
+```
+
+```
+sudo ln -s "$PWD/config/server/nn.andrewsha.net.conf" /etc/nginx/sites-available/ 
+sudo ln -s "$PWD/config/server/nn.andrewsha.net.conf" /etc/nginx/sites-enabled/
+```
