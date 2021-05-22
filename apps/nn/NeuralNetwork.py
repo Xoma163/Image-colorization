@@ -1,5 +1,7 @@
 import os
 
+from .ImageHandler import DatasetImage
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 
 from tensorflow.python.distribute.mirrored_strategy import MirroredStrategy
@@ -12,10 +14,10 @@ import tensorflow as tf
 from tensorflow.keras import optimizers, layers, models
 from tensorflow.python.data.experimental import AutoShardPolicy
 from tensorflow.python.keras.callbacks import Callback
+from tensorflow.python.keras import backend as K
 
-from ImageHandler import DatasetImage
-from consts import LEARNING_PART, EPOCHS, IMAGE_SIZE, GPUS_COUNT, BATCH_SIZE
-from utils import CyclePercentWriter, lead_time_writer, get_time_str, get_logger
+from .consts import LEARNING_PART, EPOCHS, IMAGE_SIZE, GPUS_COUNT, BATCH_SIZE
+from .utils import CyclePercentWriter, lead_time_writer, get_time_str, get_logger
 
 logger = get_logger(__name__)
 
@@ -52,7 +54,7 @@ class NeuralNetwork:
     """
     Свёрточная нейронная сеть
     """
-    WEIGHTS_FILE = 'model/weights'
+    WEIGHTS_FILE = 'apps/nn/model/weights'
 
     # https://github.com/keras-team/keras/issues/8123
 
@@ -165,14 +167,17 @@ class NeuralNetwork:
         test_data = test_data.with_options(options)
         return train_data, test_data
 
+    def load_model(self):
+        self.model.load_weights(self.WEIGHTS_FILE)
+        return
+
     @lead_time_writer
     def train(self, input_data, output_data):
         """
         Обучение модели
         """
-        # self.model.load_weights(self.WEIGHTS_FILE)
-        # return
         train_data, test_data = self.prepare_datasets(input_data, output_data)
+        K.set_value(self.model.optimizer.learning_rate, 0.00075)  # Ошибка обучения 0.0005. Ошибка тестирования 0.00299.
         self.model.fit(
             train_data,
             epochs=EPOCHS,

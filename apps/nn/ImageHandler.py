@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 from skimage.color import rgb2lab, lab2rgb
 
-from consts import IMAGES_ORIGINAL_PATH, IMAGE_SIZE, IMAGES_RESIZED_PATH
+from apps.nn.consts import IMAGE_SIZE, IMAGES_ORIGINAL_PATH, IMAGES_RESIZED_PATH
 
 
 class DatasetImage:

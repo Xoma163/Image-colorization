@@ -2,7 +2,7 @@ import logging
 import time
 from datetime import timedelta, datetime
 
-from consts import LOGS_INFO_FILE
+from apps.nn.consts import LOGS_INFO_FILE
 
 
 class CyclePercentWriter:

@@ -4,7 +4,7 @@ import os
 IMAGE_SIZE = 64
 
 # Количество изображений в выборке (макс 100 000)
-IMAGES_COUNT = 30000
+IMAGES_COUNT = 25000
 
 # Обучающая часть в долях
 LEARNING_PART = 0.7
