@@ -1,4 +1,5 @@
 import logging
+import math
 import os
 
 from ImageColorization.settings import DEBUG
@@ -25,10 +26,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 logger = logging.getLogger('nn')
 
-
-# physical_devices = tf.config.experimental.list_physical_devices('GPU')
-# for p_device in physical_devices:
-#     config = tf.config.experimental.set_memory_growth(p_device, True)
+physical_devices = tf.config.experimental.list_physical_devices('GPU')
+for p_device in physical_devices:
+    config = tf.config.experimental.set_memory_growth(p_device, True)
 
 
 class LossCallback(Callback):
@@ -142,6 +142,7 @@ class NeuralNetwork:
 
     def load_model(self):
         file = self.WEIGHTS_FILE if DEBUG else self.TRAINED_WEIGHTS_FILE
+        # file = self.TRAINED_WEIGHTS_FILE
         try:
             self.model.load_weights(file)
         except:
@@ -194,9 +195,32 @@ class NeuralNetwork:
         predicted_ab = self.model.predict(_l)
         return predicted_ab.reshape(predicted_ab.shape[1:])
 
-    def predict(self, image: DatasetImage):
+    def predict_64x64(self, image: DatasetImage):
         predicted_ab = self._predict_image(image)
         image.set_predicted_ab(predicted_ab)
 
-    def predict_many(self, images):
-        return [self.predict(image) for image in images]
+    def predict_many_64x64(self, images):
+        return [self.predict_64x64(image) for image in images]
+
+    def predict_random_image_size(self, image: DatasetImage):
+        lab = image.lab
+        w, h = image.l.shape[0], image.l.shape[1]
+        # w_images_count = math.ceil(w / IMAGE_SIZE)
+        # h_images_count = math.ceil(h / IMAGE_SIZE)
+        w_images_count = math.floor(w / IMAGE_SIZE)
+        h_images_count = math.floor(h / IMAGE_SIZE)
+        image.l = image.l[:w_images_count * IMAGE_SIZE, :h_images_count * IMAGE_SIZE]
+        bathes_matrix = []
+        for i in range(w_images_count):
+            row = []
+            for j in range(h_images_count):
+                batch_image_array = lab[i * IMAGE_SIZE:(i + 1) * IMAGE_SIZE, j * IMAGE_SIZE:(j + 1) * IMAGE_SIZE]
+                batch_dataset_image = DatasetImage(lab=batch_image_array)
+                self.predict_64x64(batch_dataset_image)
+                row.append(batch_dataset_image.get_predicted_image())
+            row_concatenated = np.concatenate(row, axis=1)
+            bathes_matrix.append(row_concatenated)
+        result_image = DatasetImage(lab=np.concatenate(bathes_matrix))
+        image.set_predicted_ab(result_image.ab)
+
+        return result_image

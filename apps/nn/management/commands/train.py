@@ -38,7 +38,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def predict_image(nn, images):
-        nn.predict_many(images)
+        nn.predict_many_64x64(images)
 
         for image in images:
             image.show_original_gray_image()

@@ -13,12 +13,18 @@ class DatasetImage:
     MAX_AB = 128
     MAX_RGB = 255
 
-    def __init__(self, rgb):
-        lab = self.rgb2lab(rgb)  # denormalized
-
+    def __init__(self, rgb=None, lab=None):
+        self.l = None
+        self.ab = None
+        self.predicted_ab = None  # normalized
+        if rgb is not None:
+            lab = self.rgb2lab(rgb)  # denormalized
         self.l = self._normalize_l(self._get_l(lab))  # normalized
         self.ab = self._normalize_ab(self._get_ab(lab))  # normalized
-        self.predicted_ab = None  # normalized
+
+    @property
+    def lab(self):
+        return self.build_lab(self._denormalize_l(self.l), self._denormalize_ab(self.ab))
 
     @property
     def a(self):
@@ -80,7 +86,7 @@ class DatasetImage:
 
     @staticmethod
     def build_lab(l, ab):
-        lab = np.zeros((IMAGE_SIZE, IMAGE_SIZE, 3))
+        lab = np.zeros((l.shape[0], l.shape[1], 3))
         lab[:, :, 0] = l[:, :, 0]
         lab[:, :, 1:] = ab
         return lab

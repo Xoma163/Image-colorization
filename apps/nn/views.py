@@ -29,7 +29,8 @@ class PredictImageTemplateView(View):
     @staticmethod
     def predict_image(image_file) -> Image:
         d_image = DatasetImage(np.array(image_file))
-        NnConfig.nn.predict(d_image)
+        NnConfig.nn.predict_random_image_size(d_image)
+        # NnConfig.nn.predict_random_image_size(d_image)
         predicted_image_lab_array = d_image.get_predicted_image()
         predicted_image_rgb_array = d_image.lab2rgb(predicted_image_lab_array)
         predicted_image_array = predicted_image_rgb_array.astype(np.uint8)
@@ -41,8 +42,8 @@ class PredictImageTemplateView(View):
         input_file = request.FILES['input_image'].file
         img = Image.open(input_file).convert("RGB")
         # ToDo:
-        if img.size != (IMAGE_SIZE, IMAGE_SIZE):
-            raise RuntimeWarning()
+        if img.size[0] < IMAGE_SIZE or img.size[1] < IMAGE_SIZE:
+            raise RuntimeWarning("Изображение должно быть 64x64 или больше")
 
         context_data = {
             'image_colored': self.image_to_base64(self.predict_image(img)),
