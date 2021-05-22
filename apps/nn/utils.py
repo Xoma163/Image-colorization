@@ -2,7 +2,7 @@ import logging
 import time
 from datetime import timedelta, datetime
 
-from apps.nn.consts import LOGS_INFO_FILE
+logger = logging.getLogger('nn')
 
 
 class CyclePercentWriter:
@@ -78,32 +78,3 @@ def decl_of_num(number, titles):
         return titles[cases[number % 10]]
     else:
         return titles[cases[5]]
-
-
-_log_format = "%(asctime)s - [%(levelname)-8s] - %(name)-15s:%(lineno)-3d - %(message)s"
-
-
-# _log_format = "%(asctime)s - [%(levelname)s] - %(name)s - %(filename)s:%(lineno)d - %(message)s"
-
-
-def get_logger(name):
-    def get_stream_handler():
-        stream_handler = logging.StreamHandler()
-        stream_handler.setLevel(logging.DEBUG)
-        stream_handler.setFormatter(logging.Formatter(_log_format))
-        return stream_handler
-
-    def get_file_handler():
-        file_handler = logging.FileHandler(LOGS_INFO_FILE, encoding="UTF-8")
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(logging.Formatter(_log_format))
-        return file_handler
-
-    _logger = logging.getLogger(name)
-    _logger.setLevel(logging.DEBUG)
-    _logger.addHandler(get_file_handler())
-    _logger.addHandler(get_stream_handler())
-    return _logger
-
-
-logger = get_logger(__name__)

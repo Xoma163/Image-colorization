@@ -127,3 +127,41 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Logging
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+if not os.path.exists(LOGS_DIR):
+    os.mkdir(LOGS_DIR)
+
+DEBUG_FILE = os.path.join(LOGS_DIR, 'debug.log')
+# ERROR_FILE = os.path.join(LOGS_DIR, 'error.log')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': '%(asctime)s - [%(levelname)-8s] - %(name)-15s:%(lineno)-3d - %(message)s',
+        },
+    },
+    'handlers': {
+        'file-debug': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': DEBUG_FILE,
+            'formatter': 'default',
+        },
+        'console-debug': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
+        },
+    },
+    'loggers': {
+        'nn': {
+            'handlers': ['file-debug', 'console-debug'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

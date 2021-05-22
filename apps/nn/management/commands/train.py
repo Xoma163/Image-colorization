@@ -1,3 +1,4 @@
+import logging
 import os
 from multiprocessing import cpu_count
 
@@ -7,14 +8,13 @@ from joblib import Parallel, delayed
 from apps.nn.ImageHandler import ImageHandler
 from apps.nn.NeuralNetwork import NeuralNetwork
 from apps.nn.consts import IMAGES_ORIGINAL_PATH, IMAGES_COUNT, LEARNING_PART
-from apps.nn.utils import get_logger, lead_time_writer
+from apps.nn.utils import lead_time_writer
 
-logger = get_logger(__name__)
+logger = logging.getLogger('nn')
 
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
-        self.setup()
         logger.debug('load images')
         dataset_images = self.load_images()
         input_data = [x.l for x in dataset_images]
@@ -23,12 +23,8 @@ class Command(BaseCommand):
         nn = NeuralNetwork()
         logger.debug('train nn')
         nn.train(input_data, output_data)
-        # predict_from_train(nn, dataset_images, 2)
+        self.predict_from_train(nn, dataset_images, 1)
         # self.predict_from_test(nn, dataset_images, 5)
-
-    @staticmethod
-    def setup():
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
     @staticmethod
     def load_image(image_path):
@@ -49,10 +45,10 @@ class Command(BaseCommand):
             image.show_predicted_image()
             image.show_original_colored_image()
 
-    def predict_from_train(self, nn, images, count=3):
+    def predict_from_train(self, nn, images, count):
         test_images = images[0:count]
         self.predict_image(nn, test_images)
 
-    def predict_from_test(self, nn, images, count=3):
+    def predict_from_test(self, nn, images, count):
         test_images = images[int(IMAGES_COUNT * LEARNING_PART):int(IMAGES_COUNT * LEARNING_PART) + count]
         self.predict_image(nn, test_images)

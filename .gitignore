@@ -5,7 +5,8 @@ venv/*
 *.jpeg
 images/*
 model/*
-.env
+logs/
 logs/*
 db.sqlite3
 ImageColorization.pid
+.env

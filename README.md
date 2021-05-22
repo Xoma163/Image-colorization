@@ -21,7 +21,6 @@ SET PATH=C:\tools\cuda\bin;%PATH%
 
 [Download 100 000 images](https://andrewsha.net/static/files/images_100k.zip) (~10 GB)
 
-
 [Download 64x64 100 000 images for testing](https://andrewsha.net/static/files/images_64x64_100k.zip) (~170 MB)
 
 ToDo

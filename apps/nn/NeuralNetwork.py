@@ -1,3 +1,4 @@
+import logging
 import os
 
 from ImageColorization.settings import DEBUG
@@ -17,14 +18,18 @@ from tensorflow.python.data.experimental import AutoShardPolicy
 from tensorflow.python.keras.callbacks import Callback
 from tensorflow.python.keras import backend as K
 
-from .consts import LEARNING_PART, EPOCHS, IMAGE_SIZE, GPUS_COUNT, BATCH_SIZE
-from .utils import CyclePercentWriter, lead_time_writer, get_time_str, get_logger
+from .consts import LEARNING_PART, EPOCHS, IMAGE_SIZE, GPUS_COUNT, BATCH_SIZE, LEARNING_RATE
+from .utils import CyclePercentWriter, lead_time_writer, get_time_str
 
-logger = get_logger(__name__)
-physical_devices = tf.config.experimental.list_physical_devices('GPU')
-# assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
-for p_device in physical_devices:
-    config = tf.config.experimental.set_memory_growth(p_device, True)
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+logger = logging.getLogger('nn')
+
+
+# physical_devices = tf.config.experimental.list_physical_devices('GPU')
+# for p_device in physical_devices:
+#     config = tf.config.experimental.set_memory_growth(p_device, True)
+
 
 class LossCallback(Callback):
     def __init__(self):
@@ -63,43 +68,6 @@ class NeuralNetwork:
 
     # https://github.com/keras-team/keras/issues/8123
 
-    # def build_lab(self, ab):
-    #     l = np.ones((64, 64, 1)) / 2
-    #     lab = np.zeros((IMAGE_SIZE, IMAGE_SIZE, 3))
-    #     ab = ab.numpy()[0]
-    #     lab[:, :, 0] = l[:, :, 0]
-    #     lab[:, :, 1:] = ab
-    #     return lab
-    #
-    # def ssim_loss(self, ab_true, ab_pred):
-    #     # return tf.reduce_mean(tf.image.ssim(ab_true, ab_pred, 1.0))
-    #     # rgbs_true = []
-    #     # rgbs_pred = []
-    #     # for i in range(len(ab_true)):
-    #     #     lab_true = self.build_lab(ab_true[i])
-    #     #     lab_pred = self.build_lab(ab_pred[i])
-    #     #     rgb_true = lab2rgb(lab_true)
-    #     #     rgb_pred = lab2rgb(lab_pred)
-    #     #     rgbs_true.append(rgb_true)
-    #     #     rgbs_pred.append(rgb_pred)
-    #     #
-    #     # rgbs_true = np.array(rgbs_true)
-    #     # rgbs_pred = np.array(rgbs_pred)
-    #
-    #     # ssim = tf.image.ssim(rgbs_true, rgbs_pred, 1.0)
-    #     ssim2 = tf.image.ssim(ab_true, ab_pred, 1.0)
-    #     # reduce_mean = tf.reduce_mean(ssim)
-    #     reduce_mean2 = tf.reduce_mean(ssim2)
-    #     # print(type(ssim))
-    #     # print(ssim.shape)
-    #     # print(reduce_mean)
-    #     # print('-----')
-    #     # print(type(ssim2))
-    #     # print(ssim2.shape)
-    #     # print(reduce_mean2)
-    #
-    #     return reduce_mean2
-
     def get_compiled_model(self):
         model = models.Sequential([
             layers.InputLayer(input_shape=(IMAGE_SIZE, IMAGE_SIZE, 1)),
@@ -121,7 +89,6 @@ class NeuralNetwork:
             layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(16, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(2, (3, 3), activation='relu', padding='same'),
-
         ])
         model.compile(
             optimizer=optimizers.Adam(),
@@ -129,12 +96,11 @@ class NeuralNetwork:
             # run_eagerly=True,
             # metrics=['accuracy']
         )
+
         return model
 
     def __init__(self):
         logger.info(f"Found devices: {[x.name for x in tf.config.list_logical_devices()]}")
-
-
 
         if GPUS_COUNT == 1:
             self.model = self.get_compiled_model()
@@ -176,7 +142,10 @@ class NeuralNetwork:
 
     def load_model(self):
         file = self.WEIGHTS_FILE if DEBUG else self.TRAINED_WEIGHTS_FILE
-        self.model.load_weights(file)
+        try:
+            self.model.load_weights(file)
+        except:
+            logger.warning("Файл с моделью не найден")
 
     @lead_time_writer
     def train(self, input_data, output_data):
@@ -184,7 +153,7 @@ class NeuralNetwork:
         Обучение модели
         """
         train_data, test_data = self.prepare_datasets(input_data, output_data)
-        K.set_value(self.model.optimizer.learning_rate, 0.001)  # Ошибка обучения 0.0005. Ошибка тестирования 0.00299.
+        K.set_value(self.model.optimizer.learning_rate, LEARNING_RATE)
         self.model.fit(
             train_data,
             epochs=EPOCHS,
