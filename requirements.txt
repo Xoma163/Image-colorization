@@ -45,7 +45,7 @@ sqlparse==0.4.1
 tensorboard==2.4.1
 tensorboard-plugin-wit==1.8.0
 tensorflow-estimator==2.4.0
-tensorflow-gpu==2.4.1
+tensorflow-gpu==2.5.1
 termcolor==1.1.0
 tifffile==2021.3.31
 tqdm==4.60.0
